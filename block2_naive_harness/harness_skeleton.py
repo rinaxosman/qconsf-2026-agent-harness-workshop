@@ -104,7 +104,12 @@ def run(workspace_dir: str, task: str) -> None:
         # Notice: `messages` — the whole conversation — goes over the wire on
         # EVERY turn. That fact will matter later today.
         # ------------------------------------------------------------------
-        response = None  # <-- your code here
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            tools=TOOL_SCHEMAS,
+            temperature=0.1,
+        )
 
         board.record_usage(response)
         msg = response.choices[0].message
@@ -144,7 +149,16 @@ def run(workspace_dir: str, task: str) -> None:
             #       {"role": "tool", "tool_call_id": call.id,
             #        "content": result})
             # --------------------------------------------------------------
-            pass  # <-- your code here
+            try:
+                result = dispatch[name](args)
+            except Exception as exc:
+                result = f"tool error: {exc}"
+
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.id,
+                "content": result,
+            })
 
         board.report(turn, messages)
 
